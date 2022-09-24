@@ -1,12 +1,16 @@
 /***************************************************
-  HUSKYLENS An Easy-to-use AI Machine Vision Sensor
+ Sugar Caculator
+
+ 2022.09.24
 
  ****************************************************/
+
+ 
 /* Setting for HUSKYLENS */
 #include "HUSKYLENS.h"
 #include "SoftwareSerial.h"
 HUSKYLENS huskylens;
-SoftwareSerial mySerial(10, 11); // RX, TX  HUSKYLENS green line >> Pin 10; blue line >> Pin 11
+SoftwareSerial mySerial(10, 11);                            /* RX, TX  HUSKYLENS green line >> Pin 10; blue line >> Pin 11 */
 
 /* Setting for Screen */
 #include "oledfont.h"
@@ -18,35 +22,30 @@ SoftwareSerial mySerial(10, 11); // RX, TX  HUSKYLENS green line >> Pin 10; blue
 #define OLED_CMD  0  //写命令
 #define OLED_DATA 1 //写数据
 
-#define buttonPin 8
-int buttonState;             // the current reading from the input pin
-int lastButtonState = LOW;   // the previous reading from the input pin
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 1000;    // the debounce time; increase if the output flickers
+/* Setting for TouchPad */
+#define touchPin 12
 
+/* Setting for LEDs */
 #define Led_R 7
 #define Led_G 5
 #define Led_Y 4
 
-#define touchPin 12
-
+/* Setting for Scale_HX711 */
 #include <Arduino.h>
 #include "HX711.h"
-
-// HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 2;   //DT blue- 2
 const int LOADCELL_SCK_PIN = 3;   // SCK purple - 3
-
 HX711 scale;
 float currentWeight = 0;
 
+/* Globle Flags */
 bool tagScaned = false;
 bool foodOn = false;
 
+/* Globle Variables */
 float currentSugarValStand;
 float currentFoodSugarVal;
 float sumSugarVal = 0;
-
 
 /* Setting for Database */
 typedef struct {
@@ -75,7 +74,6 @@ const foodTable myFoodTableArr[] {
   {16, "FRENCH", 888}
 };
 
-
 void printResult(HUSKYLENSResult result);
 
 void setup() {
@@ -84,16 +82,14 @@ void setup() {
   pinMode(Led_G, OUTPUT);
   pinMode(Led_Y, OUTPUT);
 
-  pinMode(buttonPin, INPUT);
   pinMode(touchPin, INPUT);
-
 
   /* Setting for HUSKYLENS */
   Serial.begin(115200);
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
   mySerial.begin(9600);
 
-  /* Setting for Scale */
+  /*Init the Scale */
   scale.set_scale(391.6);
   scale.tare();
 
@@ -106,33 +102,26 @@ void setup() {
     delay(100);
   }
 
-  /* Setting for OLED Screen */
+  /* Init for OLED Screen */
   OLED_Init();
   OLED_ColorTurn(0);//0正常显示 1反色显示
   OLED_DisplayTurn(0);//0正常显示 1翻转180度显示
 
-
 }
 
 void loop() {
-
-
 
   if (!huskylens.request()) Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
   else if (!huskylens.isLearned()) Serial.println(F("Nothing learned, press learn button on HUSKYLENS to learn one!"));
   else if (!huskylens.available() && tagScaned == false) {
 
     /* nothing in the camera, to the following things */
-    Serial.println(F("No Tags in the field."));
-
-    //    digitalWrite(13, LOW);
+    Serial.println(F("No Tags Found."));
   }
   else if (tagScaned == false) {
 
     HUSKYLENSResult result = huskylens.read();
     printResult(result);
-
-
 
     /* search scanned object in the struct */
 
@@ -170,19 +159,18 @@ void loop() {
   }
 
 
-
   if (tagScaned == true && foodOn == true) {
     if (digitalRead(touchPin) == HIGH) {
-      
+
       sumSugarVal += currentFoodSugarVal;
-      OLED_ShowNum(50, 8, sumSugarVal, 5 , 8);
-      OLED_Clear();
-      tagScaned = false;
-      digitalWrite(Led_R, LOW);
+      OLED_ShowNum(50, 8, sumSugarVal, 5 , 8);                                              /* update the sum of sugar */
+      OLED_Clear();                                                                         /* clear the OLED */
+      tagScaned = false;                                                                    /* reverse the Flags */
+      digitalWrite(Led_R, LOW);                                                             /* turn off the Red LED */
     }
   }
 
-  ShowOLEDInfo();
+  ShowOLEDInfo();                                                                            /* keep showing the title on the OLED */
 
 }
 
@@ -357,7 +345,6 @@ void OLED_ShowChinese(u8 x, u8 y, const u8 no, u8 sizey)
     else return;
   }
 }
-
 
 //显示图片
 //x,y显示坐标
