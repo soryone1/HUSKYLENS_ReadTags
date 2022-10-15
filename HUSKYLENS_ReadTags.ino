@@ -1,11 +1,11 @@
 /***************************************************
- Sugar Caculator
+  Sugar Caculator
 
- 2022.09.24
+  2022.09.24
 
  ****************************************************/
 
- 
+
 /* Setting for HUSKYLENS */
 #include "HUSKYLENS.h"
 #include "SoftwareSerial.h"
@@ -54,13 +54,13 @@ typedef struct {
   uint16_t sugarValue;
 } foodTable;
 
-const foodTable myFoodTableArr[] {
-  {0, "Apple", 11},
-  {1, "SPANISH", 2},
-  {2, "FRENCH", 3},
-  {3, "Apple", 44},
-  {4, "SPANISH", 55},
-  {5, "FRENCH", 66},
+const foodTable myFoodTableArr[] {       /* id; name; g */
+  {0, "Apple", 15},
+  {1, "Pear", 12},
+  {2, "Potato", 16},
+  {3, "Banana", 20},
+  {4, "litchi", 14},
+  {5, "chicken", 1},
   {6, "Apple", 77},
   {7, "SPANISH", 88},
   {8, "FRENCH", 99},
@@ -73,6 +73,17 @@ const foodTable myFoodTableArr[] {
   {15, "SPANISH", 777},
   {16, "FRENCH", 888}
 };
+
+/* Setting for RTC */
+#include <DS1307RTC.h>
+#include <Wire.h>
+tmElements_t tm;
+
+const char *monthName[12] = {
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
 
 void printResult(HUSKYLENSResult result);
 
@@ -106,6 +117,9 @@ void setup() {
   OLED_Init();
   OLED_ColorTurn(0);//0正常显示 1反色显示
   OLED_DisplayTurn(0);//0正常显示 1翻转180度显示
+
+  /* Init for RTC */
+  initRTC();
 
 }
 
@@ -171,6 +185,27 @@ void loop() {
   }
 
   ShowOLEDInfo();                                                                            /* keep showing the title on the OLED */
+
+
+  if (RTC.read(tm)) {
+    Serial.print("Ok, Time = ");
+    print2digits(tm.Hour);
+    Serial.write(':');
+    print2digits(tm.Minute);
+    Serial.write(':');
+    print2digits(tm.Second);
+    Serial.println();
+  } else {
+    if (RTC.chipPresent()) {
+      Serial.println("The DS1307 is stopped.  Please run the SetTime");
+      Serial.println("example to initialize the time and begin running.");
+      Serial.println();
+    } else {
+      Serial.println("DS1307 read error!  Please check the circuitry.");
+      Serial.println();
+    }
+    delay(9000);
+  }
 
 }
 
@@ -430,5 +465,72 @@ void touchDetect() {
     Serial.println("touched");
   } else {
     digitalWrite(Led_Y, LOW);
+  }
+}
+
+void print2digits(int number) {
+  if (number >= 0 && number < 10) {
+    Serial.write('0');
+  }
+  Serial.print(number);
+}
+
+
+bool getTime(const char *str)
+{
+  int Hour, Min, Sec;
+
+  if (sscanf(str, "%d:%d:%d", &Hour, &Min, &Sec) != 3) return false;
+  tm.Hour = Hour;
+  tm.Minute = Min;
+  tm.Second = Sec;
+  return true;
+}
+
+bool getDate(const char *str)
+{
+  char Month[12];
+  int Day, Year;
+  uint8_t monthIndex;
+
+  if (sscanf(str, "%s %d %d", Month, &Day, &Year) != 3) return false;
+  for (monthIndex = 0; monthIndex < 12; monthIndex++) {
+    if (strcmp(Month, monthName[monthIndex]) == 0) break;
+  }
+  if (monthIndex >= 12) return false;
+  tm.Day = Day;
+  tm.Month = monthIndex + 1;
+  tm.Year = CalendarYrToTm(Year);
+  return true;
+}
+
+void initRTC()
+{
+  bool parse = false;
+  bool config = false;
+
+  // get the date and time the compiler was run
+  if (getDate(__DATE__) && getTime(__TIME__)) {
+    parse = true;
+    // and configure the RTC with this info
+    if (RTC.write(tm)) {
+      config = true;
+    }
+  }
+
+  if (parse && config) {
+    Serial.print("DS1307 configured Time=");
+    Serial.print(__TIME__);
+    Serial.print(", Date=");
+    Serial.println(__DATE__);
+  } else if (parse) {
+    Serial.println("DS1307 Communication Error :-{");
+    Serial.println("Please check your circuitry");
+  } else {
+    Serial.print("Could not parse info from the compiler, Time=\"");
+    Serial.print(__TIME__);
+    Serial.print("\", Date=\"");
+    Serial.print(__DATE__);
+    Serial.println("\"");
   }
 }
