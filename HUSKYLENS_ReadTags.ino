@@ -3,6 +3,7 @@
 
   2022.09.24
 
+
  ****************************************************/
 
 
@@ -84,8 +85,52 @@ const char *monthName[12] = {
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
+/* Setting for Voice Module */
+#include <DS1307RTC.h>
 
+#include "XFS.h"          /*封装好的命令库*/
+#include "TextTab.h"      /*中文需要放在该记事本中（因为编码不兼容）*/
+
+#include <Wire.h>
+
+XFS5152CE xfs;          /*实例化语音合成对象*/
+
+
+/*超时设置，示例为30S*/
+static uint32_t LastSpeakTime = 0;
+#define SpeakTimeOut 10000
+
+uint8_t n = 1;
+static void XFS_Init()
+{
+
+  xfs.Begin(0x30);//设备i2c地址，地址为0x50
+  delay(n);
+  xfs.SetReader(XFS5152CE::Reader_XiaoYan);        //设置发音人
+  delay(n);
+  xfs.SetEncodingFormat(XFS5152CE::GB2312);           //文本的编码格式
+  delay(n);
+  xfs.SetLanguage(xfs.Language_Auto);                 //语种判断
+  delay(n);
+  xfs.SetStyle(XFS5152CE::Style_Continue);            //合成风格设置
+  delay(n);
+  xfs.SetArticulation(XFS5152CE::Articulation_Letter);  //设置单词的发音方式
+  delay(n);
+  xfs.SetSpeed(5);                         //设置语速1~10
+  delay(n);
+  xfs.SetIntonation(5);                    //设置语调1~10
+  delay(n);
+  xfs.SetVolume(10);                        //设置音量1~10
+  delay(n);
+}
+
+unsigned char result = 0xFF;
+
+
+/* Setting for HUSKYLEN Result */
 void printResult(HUSKYLENSResult result);
+
+/*===============================================================================*/
 
 void setup() {
   pinMode(13, OUTPUT);
@@ -113,6 +158,14 @@ void setup() {
     delay(100);
   }
 
+  /*Init the Voice */
+  XFS_Init();
+  xfs.StartSynthesis(TextTab1[0]);
+  while (xfs.GetChipStatus() != xfs.ChipStatus_Idle)
+  {
+    delay(30);
+  }
+
   /* Init for OLED Screen */
   OLED_Init();
   OLED_ColorTurn(0);//0正常显示 1反色显示
@@ -122,6 +175,8 @@ void setup() {
   initRTC();
 
 }
+
+/*===============================================================================*/
 
 void loop() {
 
@@ -167,6 +222,9 @@ void loop() {
   if (currentWeight = scale.get_units(10) > 10) {
     digitalWrite(Led_G, HIGH);                                                              /* led Green keep on is the right state for object */
     foodOn = true;
+
+    sayWord(3);
+    
   } else {
     digitalWrite(Led_G, LOW);
     foodOn = false;
@@ -533,4 +591,14 @@ void initRTC()
     Serial.print(__DATE__);
     Serial.println("\"");
   }
+}
+
+void sayWord(int TabIndex) {
+
+  xfs.StartSynthesis(TextTab2[TabIndex]);
+  while (xfs.GetChipStatus() != xfs.ChipStatus_Idle)
+  {
+    delay(30);
+  }
+
 }
