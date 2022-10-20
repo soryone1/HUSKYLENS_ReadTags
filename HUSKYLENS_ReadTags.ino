@@ -56,16 +56,16 @@ typedef struct {
 } foodTable;
 
 const foodTable myFoodTableArr[] {       /* id; name; g */
-  {0, "Apple", 15},
-  {1, "Pear", 12},
-  {2, "Potato", 16},
-  {3, "Banana", 20},
-  {4, "litchi", 14},
-  {5, "chicken", 1},
-  {6, "Apple", 77},
-  {7, "SPANISH", 88},
-  {8, "FRENCH", 99},
-  {9, "SPANISH", 111},
+  {0, "lemon", 5},    // lemon, avocado, 
+  {1, "bayberry", 6},  // bayberry,melon,stawberry,pawpaw,star fruit
+  {2, "watermelon", 7}, //watermelon,mango,Hami fruit
+  {3, "Plum", 8},  // Plum,apricotlute
+  {4, "grapefruit", 9},  //grapefruit,peach,grape,pineapple,
+  {5, "orange", 10}, // orange,mulberry,cherry,pear
+  {6, "pitaya", 12},  //pytaya,kiwi,apple
+  {7, "litchi", 16}, //litchi,longan,
+  {8, "banana", 22}, //banana,hawthron
+  {9, "durian", 27}, //durian,date
   {10, "FRENCH", 222},
   {11, "Apple", 333},
   {12, "SPANISH", 444},
