@@ -1,7 +1,7 @@
 /***************************************************
   Sugar Caculator
 
-  2022.09.24
+  2022.10.24
 
 
  ****************************************************/
@@ -47,6 +47,7 @@ bool foodOn = false;
 float currentSugarValStand;
 float currentFoodSugarVal;
 float sumSugarVal = 0;
+float SugarThres = 500;
 
 /* Setting for Database */
 typedef struct {
@@ -56,7 +57,7 @@ typedef struct {
 } foodTable;
 
 const foodTable myFoodTableArr[] {       /* id; name; g */
-  {0, "lemon", 5},    // lemon, avocado, 
+  {0, "lemon", 5},    // lemon, avocado,
   {1, "bayberry", 6},  // bayberry,melon,stawberry,pawpaw,star fruit
   {2, "watermelon", 7}, //watermelon,mango,Hami fruit
   {3, "Plum", 8},  // Plum,apricotlute
@@ -158,13 +159,7 @@ void setup() {
     delay(100);
   }
 
-  /*Init the Voice */
-  XFS_Init();
-  xfs.StartSynthesis(TextTab1[0]);
-  while (xfs.GetChipStatus() != xfs.ChipStatus_Idle)
-  {
-    delay(30);
-  }
+  
 
   /* Init for OLED Screen */
   OLED_Init();
@@ -173,6 +168,12 @@ void setup() {
 
   /* Init for RTC */
   initRTC();
+
+  /*Init the Voice , say the sumSugarVal is 0*/
+  XFS_Init();
+  sayWord_1(2);
+  sayWord_num(sumSugarVal);
+  sayWord_2(0);
 
 }
 
@@ -222,9 +223,6 @@ void loop() {
   if (currentWeight = scale.get_units(10) > 10) {
     digitalWrite(Led_G, HIGH);                                                              /* led Green keep on is the right state for object */
     foodOn = true;
-
-    sayWord(3);
-    
   } else {
     digitalWrite(Led_G, LOW);
     foodOn = false;
@@ -263,6 +261,24 @@ void loop() {
       Serial.println();
     }
     delay(9000);
+  }
+
+  /* set time at 18:00 everyday to report  */
+  if (tm.Hour == 18) {
+    if (sumSugarVal < SugarThres) {
+      sayWord_1(2);
+      sayWord_num(sumSugarVal);
+      sayWord_2(0);
+    } else if (sumSugarVal == SugarThres) {
+      sayWord_1(1);
+      sayWord_num(sumSugarVal);
+      sayWord_2(0);
+    } else {
+      sayWord_1(0);
+      sayWord_num(sumSugarVal);
+      sayWord_2(0);
+      sayWord_2(1);
+    }
   }
 
 }
@@ -593,12 +609,29 @@ void initRTC()
   }
 }
 
-void sayWord(int TabIndex) {
+void sayWord_1(int TabIndex) {
+
+  xfs.StartSynthesis(TextTab1[TabIndex]);
+  while (xfs.GetChipStatus() != xfs.ChipStatus_Idle)
+  {
+    delay(30);
+  }
+}
+
+void sayWord_2(int TabIndex) {
 
   xfs.StartSynthesis(TextTab2[TabIndex]);
   while (xfs.GetChipStatus() != xfs.ChipStatus_Idle)
   {
     delay(30);
   }
+}
 
+void sayWord_num(int num) {
+  String sumSugarVal = String(num);
+  xfs.StartSynthesis(sumSugarVal);
+  while (xfs.GetChipStatus() != xfs.ChipStatus_Idle)
+  {
+    delay(30);
+  }
 }
