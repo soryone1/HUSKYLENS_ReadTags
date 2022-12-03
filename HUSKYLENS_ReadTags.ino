@@ -42,6 +42,7 @@ float currentWeight = 0;
 /* Globle Flags */
 bool tagScaned = false;
 bool foodOn = false;
+bool isReported = false;
 
 /* Globle Variables */
 float currentSugarValStand;
@@ -264,20 +265,23 @@ void loop() {
   }
 
   /* set time at 18:00 everyday to report  */
-  if (tm.Hour == 18) {
+  if (tm.Hour == 16 && isReported == false) {
     if (sumSugarVal < SugarThres) {
       sayWord_1(2);
       sayWord_num(sumSugarVal);
       sayWord_2(0);
+      isReported = true;
     } else if (sumSugarVal == SugarThres) {
       sayWord_1(1);
       sayWord_num(sumSugarVal);
       sayWord_2(0);
+      isReported = true;
     } else {
       sayWord_1(0);
       sayWord_num(sumSugarVal);
       sayWord_2(0);
       sayWord_2(1);
+      isReported = true;
     }
   }
 
